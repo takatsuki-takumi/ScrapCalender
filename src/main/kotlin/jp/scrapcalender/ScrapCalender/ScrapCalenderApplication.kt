@@ -17,5 +17,6 @@ fun main(args: Array<String>) {
 fun scrap() {
     val url = "https://www.nikkei.com/markets/kabu/"
     val document = Jsoup.connect(url).get()
-    println(document.select(".mkc-stock_prices").first().text())
+    val ans = document.select("span").filter {it.text() == "トップ"}
+    println(ans)
 }
