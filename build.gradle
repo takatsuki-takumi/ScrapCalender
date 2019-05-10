@@ -27,6 +27,8 @@ dependencies {
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	compile 'com.github.kittinunf.fuel:fuel:1.12.0'
 	compile 'org.jsoup:jsoup:1.11.3'
+	compile group:'org.xerial', name:'sqlite-jdbc', version:'3.8.11.2'
+	compile 'org.jetbrains.exposed:exposed:0.9.1'
 }
 
 compileKotlin {
