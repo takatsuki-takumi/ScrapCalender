@@ -21,7 +21,7 @@ class HomeController {
         mav.setViewName("home")
         //データーベース内容のオブジェクト化
         var urllist : ArrayList<ArrayList<String>> = arrayListOf()
-        Database.connect("jdbc:sqlite:/Users/takatsuki.takumi/Mydev/ScrapCalender/SCDB.sqlite3", "org.sqlite.JDBC")
+        Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
         transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
             for (url in URL_DATALINK.selectAll()) {
                 var templist : ArrayList<String> = arrayListOf()
