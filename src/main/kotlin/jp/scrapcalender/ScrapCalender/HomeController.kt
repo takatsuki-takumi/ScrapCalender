@@ -7,6 +7,8 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.ui.Model
+import org.springframework.web.bind.annotation.ModelAttribute
+import org.springframework.web.bind.annotation.RequestParam
 import java.sql.Connection
 import org.springframework.web.servlet.ModelAndView
 import java.util.ArrayList
@@ -48,7 +50,23 @@ class ViewController {
 @Controller
 class SelectController {
     @GetMapping("/select")
-    fun view(): String {
+    fun view(@RequestParam geturl : String, model : Model): String {
+        println(geturl)
+        model.addAttribute("geturl", geturl)
         return "select"
+    }
+}
+
+@Controller
+class CheckURLController{
+    @GetMapping("/check_url")
+    fun checkurl(@RequestParam geturl: String, model: Model): String{
+        var rtn = "redirect:select?geturl=" + geturl
+        println("here")
+        if (geturl == ""){
+            println("here")
+            rtn = "redirect:"
+        }
+        return rtn
     }
 }

@@ -10,10 +10,14 @@
     <h1>
      ScrapCalender
     </h1>
+
     <p>
+        <form action="#" th:action="@{/check_url}" method="GET">
         URL入力欄
-        <input type="text" name="geturl">
+        <input type="text" name="geturl"><button type="submit">Scraping</button>
+        </form>
     </p>
+
     <table>
         <tr>
             <th>URL</th>
@@ -24,6 +28,7 @@
             <td th:text="${obj[1]}"></td>
         </tr>
     </table>
+
 </body>
 
 </html>
