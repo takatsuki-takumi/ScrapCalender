@@ -38,7 +38,7 @@ fun scrap() {
 
 // DB Control
 fun dbconnect(){
-    Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+    Database.connect("jdbc:sqlite:https://github.com/takatsuki-takumi/ScrapCalender/blob/master/SCDB.sqlite3", "org.sqlite.JDBC")
     transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
         /*URL_DATALINK.insert {
             it[url] = "https://www.yahoo.co.jp/"
