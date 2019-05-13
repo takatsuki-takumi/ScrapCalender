@@ -11,6 +11,7 @@ import org.jetbrains.exposed.sql.Table
 import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.insert
+import org.jetbrains.exposed.sql.selectAll
 
 @SpringBootApplication
 class ScrapCalenderApplication
@@ -39,9 +40,10 @@ fun scrap() {
 fun dbconnect(){
     Database.connect("jdbc:sqlite:/Users/takatsuki.takumi/Mydev/ScrapCalender/SCDB.sqlite3", "org.sqlite.JDBC")
     transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
-        URL_DATALINK.insert {
-            it[url] = "https://www.google.com/"
-            it[data_link] = "google"
-        }
+        /*URL_DATALINK.insert {
+            it[url] = "https://www.yahoo.co.jp/"
+            it[data_link] = "yahoo"
+        }*/
+        println(URL_DATALINK.selectAll().toList())
     }
 }

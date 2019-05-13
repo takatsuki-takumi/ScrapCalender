@@ -7,9 +7,23 @@
 </head>
 
 <body>
-    <p>
+    <h1>
      ScrapCalender
+    </h1>
+    <p>
+        URL入力欄
+        <input type="text" name="geturl">
     </p>
+    <table>
+        <tr>
+            <th>URL</th>
+            <th>LINK</th>
+        </tr>
+        <tr th:each="obj:${urllist}">
+            <td th:text="${obj[0]}"></td>
+            <td th:text="${obj[1]}"></td>
+        </tr>
+    </table>
 </body>
 
 </html>
