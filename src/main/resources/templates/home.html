@@ -12,13 +12,14 @@
     </h1>
 
     <p>
+        <span th:text="${error}" style="color: firebrick"></span>
         <form action="#" th:action="@{/check_url}" method="GET">
         URL入力欄
         <input type="text" name="geturl"><button type="submit">Scraping</button>
         </form>
     </p>
 
-    <table>
+    <table rules="all" frame="border">
         <tr>
             <th>URL</th>
             <th>LINK</th>

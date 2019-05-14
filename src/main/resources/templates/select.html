@@ -7,8 +7,47 @@
 </head>
 
 <body>
-    <h1>Select</h1>
-    <h2 th:text="${geturl}"></h2>
+    <p>
+        <a href="./">Homeに戻る</a>
+    </p>
+    <h1>スクレイピング箇所の選択</h1>
+    <p>
+        <a th:href="${geturl}" target="_blank" th:text="${geturl}"></a>
+    </p>
+
+    <p>
+        <form action="#" th:action="@{/select}" method="GET">
+            <input type="hidden" name="geturl" th:value="${geturl}">
+            <div>idで絞り込む</div>
+            <input type="text" name="id_box"><button type="submit">追加</button>
+        </form>
+        <form action="#" th:action="@{/select}" method="GET">
+            <input type="hidden" name="geturl" th:value="${geturl}">
+            <div>classで絞り込む</div>
+            <input type="text" name="class_box"><button type="submit">追加</button>
+        </form>
+        <form action="#" th:action="@{/select}" method="GET">
+            <input type="hidden" name="geturl" th:value="${geturl}">
+            <div>tagで絞り込む</div>
+            <input type="text" name="tag_box"><button type="submit">追加</button>
+        </form>
+    </p>
+
+    <form action="#" th:action="@{/confirm}" method="GET">
+        <input type="hidden" name="geturl" th:value="${geturl}">
+        <button type="submit">以下の内容でスクレイピング</button>
+    </form>
+
+    <table rules="all" frame="border">
+        <tr>
+            <th>絞り込み方法</th>
+            <th>値</th>
+        </tr>
+         <tr th:each="obj:${search_list}">
+            <td th:text="${obj[0]}"></td>
+            <td th:text="${obj[1]}"></td>
+        </tr>
+    </table>
 </body>
 
 </html>

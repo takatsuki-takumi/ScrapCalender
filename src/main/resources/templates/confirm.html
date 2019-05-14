@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8" http-equiv="Content-Type" content="text/html" />
+    <title>Confirm</title>
+</head>
+
+<body>
+    <h1>スクレイピング頻度の設定</h1>
+    <p>
+        <span>スクレイピング内容</span>
+        <table rules="all" frame="border">
+            <tr>
+                <th>絞り込み方法</th>
+                <th>値</th>
+            </tr>
+            <tr th:each="obj:${search_list}">
+                <td th:text="${obj[0]}"></td>
+                <td th:text="${obj[1]}"></td>
+            </tr>
+        </table>
+    </p>
+
+    <span>スクレイピング頻度の設定</span>
+    <form action="#" th:action="@{/check_time}" method="GET">
+        <input type="hidden" name="geturl" th:value="${geturl}">
+        <input type="text" name="time_span">分おきに取得する
+        <button type="submit">この頻度で決定！</button>
+    </form>
+</body>
+
+</html>
