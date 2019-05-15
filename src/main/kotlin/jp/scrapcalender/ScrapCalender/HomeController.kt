@@ -3,22 +3,44 @@ package jp.scrapcalender.ScrapCalender
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
+import java.sql.Connection
+import org.jetbrains.exposed.sql.Table
+import org.jetbrains.exposed.sql.insert
 import org.springframework.stereotype.Controller
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.RequestParam
-import java.sql.Connection
 import org.springframework.web.servlet.ModelAndView
-import java.util.ArrayList
 import org.jsoup.Jsoup
 import java.lang.Exception
+import java.security.MessageDigest
+import java.text.SimpleDateFormat
+import java.util.*
 
+
+//hash関数
+fun sha256(input: String) = hashString(input)
+
+private fun hashString(input: String): String{
+    var output: String =MessageDigest.getInstance("SHA-256").digest(input.toByteArray()).joinToString(separator = "") {
+        "%02x".format(it)
+    }
+    return output
+}
+
+//define table
+object URL_TIME_SPAN:Table(){
+    var url = text("url").primaryKey()
+    var date = text("date")
+    var span = integer("span")
+}
 
 //view画面処理
 @Controller
 class ViewController {
-    @GetMapping("/view")
+    @GetMapping("/view/*")
     fun view(): String {
+        println(sha256("rilakkuma"))
         return "view"
     }
 }
@@ -57,28 +79,21 @@ class Controller {
 
     //select画面処理
     @GetMapping("/select")
-    fun select(@RequestParam geturl : String, @RequestParam(defaultValue = "") id_box: String, @RequestParam(defaultValue = "") class_box: String, @RequestParam(defaultValue = "") tag_box: String, model : Model): String {
+    fun select(@RequestParam geturl : String, @RequestParam(defaultValue = "") selecter_box: String, @RequestParam(defaultValue = "") tags_box: String, model: Model): String {
         var search_with:ArrayList<String> = arrayListOf()
         model.addAttribute("geturl", geturl)
-        if (id_box != ""){
-            search_with.add("id")
-            search_with.add(id_box)
+        if (selecter_box != ""){
+            search_with.add("selecter")
+            search_with.add(selecter_box)
             search_list.add(search_with)
             search_with = arrayListOf()
         }
-        if (class_box != ""){
-            search_with.add("class")
-            search_with.add(class_box)
+        if (tags_box != ""){
+            search_with.add("tags")
+            search_with.add(tags_box)
             search_list.add(search_with)
             search_with = arrayListOf()
         }
-        if (tag_box != ""){
-            search_with.add("tag")
-            search_with.add(tag_box)
-            search_list.add(search_with)
-            search_with = arrayListOf()
-        }
-        model.addAttribute("id_box", id_box)
         model.addAttribute("search_list",search_list)
         return "select"
     }
@@ -100,7 +115,12 @@ class Controller {
     }
 
     @GetMapping("/confirm")
-    fun confirm(@RequestParam geturl: String, model:Model): String{
+    fun confirm(@RequestParam geturl: String,@RequestParam(defaultValue = "") error: String,model:Model): String{
+        if (error != ""){
+            model.addAttribute("error", "不適切な数値です。")
+        } else {
+            model.addAttribute("error", "")
+        }
         model.addAttribute("geturl",geturl)
         model.addAttribute("search_list", search_list)
         return "confirm"
@@ -108,22 +128,39 @@ class Controller {
 
     @GetMapping("/check_time")
     fun check_time(@RequestParam geturl: String, @RequestParam time_span: String, model: Model): String{
-        var rtn = "redirect:complete?geturl=" + geturl
+        var rtn = "redirect:complete?geturl=" + geturl + "&time_span=" + time_span
         var time_span_int = 0
         if (time_span == "0"){
-            rtn = "redirect:confirm?geturl=" + geturl
+            rtn = "redirect:confirm?geturl=" + geturl + "&error=time"
         }
         if (time_span == ""){
-            rtn = "redirect:confirm?geturl=" + geturl
+            rtn = "redirect:confirm?geturl=" + geturl + "&error=time"
         }
         try{
             time_span_int = time_span.toInt()
         }catch (e:Exception){
-            rtn =  "redirect:confirm?geturl=" + geturl
+            rtn =  "redirect:confirm?geturl=" + geturl + "&error=time"
         }
         if (time_span_int < 1){
-            rtn = "redirect:confirm?geturl=" + geturl
+            rtn = "redirect:confirm?geturl=" + geturl + "&error=time"
         }
         return rtn
     }
+
+    @GetMapping("/complete")
+    fun complete(@RequestParam geturl: String,@RequestParam time_span: String, model: Model): String{
+        Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+        transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
+            //val cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
+            //var cal_add:Calendar = cal.add(Calendar.MINUTE, time_span.toInt())
+            //var date_add:Date = cal_add.getTime()
+            URL_TIME_SPAN.insert {
+                it[url] = geturl
+                it[date] = "Date"
+                it[span] = time_span.toInt()
+            }
+        }
+        return "complete"
+    }
+
 }

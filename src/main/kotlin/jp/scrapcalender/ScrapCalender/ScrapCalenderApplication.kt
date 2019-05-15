@@ -12,6 +12,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import org.jetbrains.exposed.sql.SchemaUtils.create
 import org.jetbrains.exposed.sql.insert
 import org.jetbrains.exposed.sql.selectAll
+import org.jsoup.nodes.Document
+import org.jsoup.select.Elements
+import org.jsoup.nodes.Element
+import javax.print.Doc
 
 @SpringBootApplication
 class ScrapCalenderApplication
@@ -31,9 +35,13 @@ fun main(args: Array<String>) {
 // scraping function
 fun scrap() {
     val url = "https://www.nikkei.com/markets/kabu/"
-    val document = Jsoup.connect(url).get()
-    val ans = document.select("span").filter {it.text() == "トップ"}
-    println(ans)
+    val document:Document = Jsoup.connect(url).get()
+    //val ans = document.select("span").filter {it.text() == "トップ"}
+    val an:Elements = document.select(".mkc-stock_prices")
+    for(element:Element in an){
+        println(element.text())
+    }
+    println("here")
 }
 
 // DB Control

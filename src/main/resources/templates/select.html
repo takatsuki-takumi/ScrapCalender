@@ -18,18 +18,13 @@
     <p>
         <form action="#" th:action="@{/select}" method="GET">
             <input type="hidden" name="geturl" th:value="${geturl}">
-            <div>idで絞り込む</div>
-            <input type="text" name="id_box"><button type="submit">追加</button>
+            <div>selecterで絞り込む</div>
+            <input type="text" name="selecter_box"><button type="submit">追加</button>
         </form>
         <form action="#" th:action="@{/select}" method="GET">
             <input type="hidden" name="geturl" th:value="${geturl}">
-            <div>classで絞り込む</div>
-            <input type="text" name="class_box"><button type="submit">追加</button>
-        </form>
-        <form action="#" th:action="@{/select}" method="GET">
-            <input type="hidden" name="geturl" th:value="${geturl}">
-            <div>tagで絞り込む</div>
-            <input type="text" name="tag_box"><button type="submit">追加</button>
+            <div>id,class,tagで絞り込む</div>
+            <input type="text" name="tags_box"><button type="submit">追加</button>
         </form>
     </p>
 
