@@ -3,11 +3,27 @@
 
 <head>
     <meta charset="UTF-8" http-equiv="Content-Type" content="text/html" />
-    <title>ScrapCalender</title>
+    <title>ScrapeCalender</title>
 </head>
+    <p>
+        <a href="./">Homeに戻る</a>
+    </p>
 
-<body>
     <h1>View</h1>
+
+    <p>
+    <table rules="all" frame="border">
+        <tr>
+            <th>日付</th>
+            <th>データ</th>
+        </tr>
+        <tr th:each="obj:${data_list}">
+            <td th:text="${obj[0]}"></td>
+            <td th:text="${obj[1]}"></td>
+        </tr>
+    </table>
+    </p>
+
 </body>
 
 </html>
