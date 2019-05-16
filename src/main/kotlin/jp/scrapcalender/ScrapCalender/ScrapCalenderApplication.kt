@@ -55,3 +55,15 @@ fun dbconnect(){
         println(URL_DATALINK.selectAll().toList())
     }
 }
+
+/*
+var str = "Thu May 16 09:54:10 JST 2019"
+//str to date
+var format = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH)
+var todate = format.parse(str)
+//date to cal
+val cal_int: Calendar = Calendar.getInstance ()
+cal_int.setTime(todate)
+//cal to date
+var cal_to_date:Date = cal_int.getTime()
+ */

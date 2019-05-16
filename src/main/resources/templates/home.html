@@ -26,7 +26,7 @@
         </tr>
         <tr th:each="obj:${urllist}">
             <td th:text="${obj[0]}"></td>
-            <td th:text="${obj[1]}"></td>
+            <td><a th:text="${obj[1]}" th:href="@{${obj[1]}}"></a></td>
         </tr>
     </table>
 

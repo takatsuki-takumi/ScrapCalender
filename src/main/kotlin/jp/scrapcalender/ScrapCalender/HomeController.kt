@@ -1,5 +1,6 @@
 package jp.scrapcalender.ScrapCalender
 
+import org.hibernate.validator.constraints.URL
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.selectAll
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -15,6 +16,8 @@ import org.jsoup.Jsoup
 import java.lang.Exception
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 
@@ -38,7 +41,7 @@ object URL_TIME_SPAN:Table(){
 //view画面処理
 @Controller
 class ViewController {
-    @GetMapping("/view/*")
+    @GetMapping("/view")
     fun view(): String {
         println(sha256("rilakkuma"))
         return "view"
@@ -148,16 +151,22 @@ class Controller {
     }
 
     @GetMapping("/complete")
-    fun complete(@RequestParam geturl: String,@RequestParam time_span: String, model: Model): String{
+    fun complete(@RequestParam geturl: String, @RequestParam time_span: String, model: Model): String{
         Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
         transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
-            //val cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
-            //var cal_add:Calendar = cal.add(Calendar.MINUTE, time_span.toInt())
-            //var date_add:Date = cal_add.getTime()
-            URL_TIME_SPAN.insert {
+            val cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
+            cal.add(Calendar.MINUTE, time_span.toInt())
+            var date_add:Date = cal.getTime()
+            /*URL_TIME_SPAN.insert {
                 it[url] = geturl
-                it[date] = "Date"
+                it[date] = date_add.toString()
                 it[span] = time_span.toInt()
+            }*/
+            var url_hash = sha256(geturl)
+            var view_link = "./view?view_link=" + url_hash
+            URL_DATALINK.insert {
+                it[url] = geturl
+                it[data_link] = view_link
             }
         }
         return "complete"
