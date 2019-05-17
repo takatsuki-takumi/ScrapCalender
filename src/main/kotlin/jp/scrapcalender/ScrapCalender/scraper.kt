@@ -1,3 +1,4 @@
+//./gradlew bootRun --args "args"
 package jp.scrapcalender.ScrapCalender
 
 import org.jetbrains.exposed.sql.*
@@ -9,24 +10,8 @@ import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import java.sql.Connection
 import java.text.SimpleDateFormat
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.Date
-
-
-
-fun main(){
-    var bool = true
-    while(bool){
-        if(check_time()){
-            var url = get_latest_url()
-            scrape(url)
-            delete_latest(url)
-        }
-        Thread.sleep(5000)
-    }
-}
 
 fun check_time(): Boolean{
     Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
