@@ -70,7 +70,7 @@ class Controller {
         }
         //データーベース内容のオブジェクト化
         var urllist : ArrayList<ArrayList<String>> = arrayListOf()
-        Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+        Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
         transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
             for (url in URL_DATALINK.selectAll()) {
                 var templist : ArrayList<String> = arrayListOf()
@@ -158,7 +158,7 @@ class Controller {
     //コンプリート画面処理
     @GetMapping("/complete")
     fun complete(@RequestParam geturl: String, @RequestParam time_span: String, model: Model): String{
-        Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+        Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
         transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
             val cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
             cal.add(Calendar.MINUTE, time_span.toInt())
@@ -190,7 +190,7 @@ class Controller {
     fun view(@RequestParam view_link:String, model: Model,mav: ModelAndView): ModelAndView {
         mav.setViewName("view")
         var listinlist:ArrayList<ArrayList<String>> = arrayListOf()
-        Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+        Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
         transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
             for(column in URLHASH_DATE_DATA_ID.select(URLHASH_DATE_DATA_ID.urlhash eq view_link).orderBy(URLHASH_DATE_DATA_ID.date,isAsc = false)){
                 var templist:ArrayList<String> = arrayListOf()

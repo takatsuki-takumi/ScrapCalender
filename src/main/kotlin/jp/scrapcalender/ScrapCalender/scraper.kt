@@ -14,27 +14,72 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import java.util.Date
 
+
+
 fun main(){
-    //var url = get_latest_url()
-    //scrap(url)
+    var bool = true
+    while(bool){
+        if(check_time()){
+            var url = get_latest_url()
+            scrape(url)
+            delete_latest(url)
+        }
+        Thread.sleep(5000)
+    }
 }
-/*
+
+fun check_time(): Boolean{
+    Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
+    var checker = true
+    transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
+        var cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
+        var date_now: Date = cal.getTime()
+        for(column in URL_TIME_SPAN.selectAll().orderBy(URL_TIME_SPAN.date).limit(1)){
+            var latest_date = column[URL_TIME_SPAN.date].toString()
+            var format = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH)
+            var latest_date_date = format.parse(latest_date)
+            if(date_now.before(latest_date_date)){
+                checker = false
+            }
+        }
+    }
+    return checker
+}
+
 fun get_latest_url(): String{
-    Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+    Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
     var latest_url = ""
     transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
         for(column in URL_TIME_SPAN.selectAll().orderBy(URL_TIME_SPAN.date).limit(1)){
             latest_url = column[URL_TIME_SPAN.url].toString()
         }
     }
-    println(latest_url)
     return latest_url
 }
-*/
 
-/*
+fun delete_latest(latest_url: String){
+    Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
+    transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
+        var span_get:Int = 0
+        for(column in URL_TIME_SPAN.select(URL_TIME_SPAN.url eq latest_url)){
+            span_get = column[URL_TIME_SPAN.span]
+        }
+        val now_cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
+        now_cal.add(Calendar.MINUTE, span_get)
+        var update_date:Date = now_cal.getTime()
+        URL_TIME_SPAN.deleteWhere {
+            URL_TIME_SPAN.url eq latest_url
+        }
+        URL_TIME_SPAN.insert {
+            it[url] = latest_url
+            it[date] = update_date.toString()
+            it[span] = span_get
+        }
+    }
+}
+
 fun scrape(url: String) {
-    Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+    Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
     val document: Document = Jsoup.connect(url).get()
     var url_hash = sha256(url)
     var cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
@@ -52,7 +97,6 @@ fun scrape(url: String) {
         }
     }
 }
-*/
 
 
 /*
