@@ -16,15 +16,43 @@ import org.jsoup.nodes.Element
 import java.util.*
 import java.util.Date
 import javax.print.Doc
+import java.text.SimpleDateFormat
 
 @SpringBootApplication
 class ScrapCalenderApplication
 
 //main function
 fun main(args: Array<String>) {
-    //var url = get_latest_url()
-    //scrape(url)
+    /*
+    var bool = true
+    while(bool){
+        if(check_time()){
+            var url = get_latest_url()
+            scrape(url)
+            delete_latest(url)
+        }
+        Thread.sleep(5000)
+    }
+    */
 	runApplication<ScrapCalenderApplication>(*args)
+}
+
+fun check_time(): Boolean{
+    Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+    var checker = true
+    transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
+        var cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
+        var date_now: Date = cal.getTime()
+        for(column in URL_TIME_SPAN.selectAll().orderBy(URL_TIME_SPAN.date).limit(1)){
+            var latest_date = column[URL_TIME_SPAN.date].toString()
+            var format = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH)
+            var latest_date_date = format.parse(latest_date)
+            if(date_now.before(latest_date_date)){
+                checker = false
+            }
+        }
+    }
+    return checker
 }
 
 fun get_latest_url(): String{
@@ -36,6 +64,32 @@ fun get_latest_url(): String{
         }
     }
     return latest_url
+}
+
+fun delete_latest(latest_url: String){
+    Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
+    transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
+        var span_get:Int = 0
+        var old_date = ""
+        for(column in URL_TIME_SPAN.select(URL_TIME_SPAN.url eq latest_url)){
+            span_get = column[URL_TIME_SPAN.span]
+            old_date = column[URL_TIME_SPAN.date]
+        }
+        var format = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH)
+        var old_date_date = format.parse(old_date)
+        val cal_old: Calendar = Calendar.getInstance ()
+        cal_old.setTime(old_date_date)
+        cal_old.add(Calendar.MINUTE, span_get)
+        var update_date:Date = cal_old.getTime()
+        URL_TIME_SPAN.deleteWhere {
+            URL_TIME_SPAN.url eq latest_url
+        }
+        URL_TIME_SPAN.insert {
+            it[url] = latest_url
+            it[date] = update_date.toString()
+            it[span] = span_get
+        }
+    }
 }
 
 fun scrape(url: String) {

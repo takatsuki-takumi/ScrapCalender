@@ -33,19 +33,20 @@ fun get_latest_url(): String{
 */
 
 /*
-fun scrap(url: String) {
+fun scrape(url: String) {
+    Database.connect("jdbc:sqlite:./SCDB.sqlite3", "org.sqlite.JDBC")
     val document: Document = Jsoup.connect(url).get()
     var url_hash = sha256(url)
-    val cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
+    var cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
     var date_now: Date = cal.getTime()
-    transaction {
-        for (column in URLHASH_TYPE_SELECTER_ID.select(URLHASH_TYPE_SELECTER_ID.id eq url_hash)){
+    transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
+        for (column in URLHASH_TYPE_SELECTER_ID.select(URLHASH_TYPE_SELECTER_ID.urlhash eq url_hash)){
             var elems: Elements = document.select(column[URLHASH_TYPE_SELECTER_ID.selecter].toString())
             for(elem: Element in elems){
                 URLHASH_DATE_DATA_ID.insert {
                     it[urlhash] = url_hash
                     it[date] = date_now.toString()
-                    it[data] = elem.toString()
+                    it[data] = elem.text()
                 }
             }
         }
