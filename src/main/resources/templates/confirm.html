@@ -32,6 +32,13 @@
         <input type="text" name="time_span">分おきに取得する
         <button type="submit">この頻度で決定！</button>
     </form>
+
+    <span>一回だけスクレイピングする</span>
+    <form action="#" th:action="@{/complete}" method="GET">
+        <input type="hidden" name="geturl" th:value="${geturl}">
+        <input type="hidden" name="time_span" value="0">
+        <button type="submit">一回だけスクレイピング</button>
+    </form>
 </body>
 
 </html>

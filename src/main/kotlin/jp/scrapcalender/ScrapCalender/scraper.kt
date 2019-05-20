@@ -45,7 +45,7 @@ fun get_latest_url(): String{
 fun delete_latest(latest_url: String){
     Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
     transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
-        var span_get:Int = 0
+        var span_get = 0
         for(column in URL_TIME_SPAN.select(URL_TIME_SPAN.url eq latest_url)){
             span_get = column[URL_TIME_SPAN.span]
         }
@@ -55,10 +55,12 @@ fun delete_latest(latest_url: String){
         URL_TIME_SPAN.deleteWhere {
             URL_TIME_SPAN.url eq latest_url
         }
-        URL_TIME_SPAN.insert {
-            it[url] = latest_url
-            it[date] = update_date.toString()
-            it[span] = span_get
+        if (span_get != 0){
+            URL_TIME_SPAN.insert {
+                it[url] = latest_url
+                it[date] = update_date.toString()
+                it[span] = span_get
+            }
         }
     }
 }
