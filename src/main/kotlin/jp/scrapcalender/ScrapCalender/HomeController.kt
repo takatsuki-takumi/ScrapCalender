@@ -32,10 +32,11 @@ object URL_DATALINK: Table(){
     val url = text("url").primaryKey()
     val data_link = text("data_link").uniqueIndex()
 }
-object URL_TIME_SPAN:Table(){
+object URL_TIME_SPAN_SAME:Table(){
     var url = text("url").primaryKey()
     var date = text("date")
     var span = integer("span")
+    var same = text("same")
 }
 object URLHASH_TYPE_SELECTER_ID:Table(){
     var urlhash = text("urlhash")
@@ -135,8 +136,8 @@ class Controller {
 
     //spanタイムエラー処理
     @GetMapping("/check_time")
-    fun check_time(@RequestParam geturl: String, @RequestParam time_span: String, model: Model): String{
-        var rtn = "redirect:complete?geturl=" + geturl + "&time_span=" + time_span
+    fun check_time(@RequestParam geturl: String, @RequestParam time_span: String, @RequestParam(defaultValue = "false") getsame: String, model: Model): String{
+        var rtn = "redirect:complete?geturl=" + geturl + "&time_span=" + time_span + "&getsame=" + getsame
         var time_span_int = 0
         if (time_span == "0"){
             rtn = "redirect:confirm?geturl=" + geturl + "&error=time"
@@ -157,16 +158,17 @@ class Controller {
 
     //コンプリート画面処理
     @GetMapping("/complete")
-    fun complete(@RequestParam geturl: String, @RequestParam time_span: String, model: Model): String{
+    fun complete(@RequestParam geturl: String, @RequestParam time_span: String, @RequestParam(defaultValue = "false") getsame: String, model: Model): String{
         Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
         transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
             val cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
             cal.add(Calendar.MINUTE, time_span.toInt())
             var date_add:Date = cal.getTime()
-            URL_TIME_SPAN.insert {
+            URL_TIME_SPAN_SAME.insert {
                 it[url] = geturl
                 it[date] = date_add.toString()
                 it[span] = time_span.toInt()
+                it[same] = getsame
             }
             var url_hash = sha256(geturl)
             var view_link = "./view?view_link=" + url_hash

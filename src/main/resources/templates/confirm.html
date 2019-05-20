@@ -6,14 +6,14 @@
     <title>ScrapeCalender - Confirm</title>
 </head>
 
-<body>
+<p>
     <p>
         <a href="./">Homeに戻る</a>
     </p>
     <h1>スクレイピング頻度の設定</h1>
     <span th:text="${error}" style="color: firebrick"></span>
     <p>
-        <span>スクレイピング内容</span>
+        <h3>スクレイピング内容</h3>
         <table rules="all" frame="border">
             <tr>
                 <th>絞り込み方法</th>
@@ -25,20 +25,26 @@
             </tr>
         </table>
     </p>
-
-    <span>スクレイピング頻度の設定</span>
+    <br>
+    <p>
+    <h3>スクレイピング頻度の設定</h3>
     <form action="#" th:action="@{/check_time}" method="GET">
         <input type="hidden" name="geturl" th:value="${geturl}">
-        <input type="text" name="time_span">分おきに取得する
+        <input type="text" name="time_span">分おきに取得する<br>
+        同じ値が連続した場合は記録しない
+        <input type="checkbox" name="getsame" value="true"><br>
         <button type="submit">この頻度で決定！</button>
     </form>
-
-    <span>一回だけスクレイピングする</span>
+    </p>
+    <br>
+    <p>
+    <h3>一回だけスクレイピングする</h3>
     <form action="#" th:action="@{/complete}" method="GET">
         <input type="hidden" name="geturl" th:value="${geturl}">
         <input type="hidden" name="time_span" value="0">
         <button type="submit">一回だけスクレイピング</button>
     </form>
+    </p>
 </body>
 
 </html>
