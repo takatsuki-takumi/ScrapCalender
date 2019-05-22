@@ -5,9 +5,7 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.Connection
 import org.springframework.stereotype.Controller
-import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.servlet.ModelAndView
 import org.jsoup.Jsoup
 import java.lang.Exception
@@ -15,6 +13,15 @@ import java.security.MessageDigest
 import java.util.*
 import java.util.Date
 import kotlin.collections.ArrayList
+import com.fasterxml.jackson.annotation.*
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.module.kotlin.*
+import org.springframework.http.MediaType
+import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder.json
+
+
 
 
 //hash関数
@@ -205,4 +212,34 @@ class Controller {
         return mav
     }
 
+}
+
+@RestController
+class RestController{
+    class Datas(
+        var datalist: ArrayList<Data_one> = arrayListOf(),
+        var tableid: String,
+        var number_of_data: Int
+    )
+
+    class Data_one(
+        var date:String = "",
+        var data:String = ""
+    )
+
+    @RequestMapping("/view/db_data")
+    @ResponseBody
+    fun get_db(@RequestParam viewid: String,@RequestParam(defaultValue = "30") numberofdata:String): Datas{
+        Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
+        var datas = Datas(datalist = arrayListOf(),number_of_data = 0,tableid = "")
+        transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
+            for(column in URLHASH_DATE_DATA_ID.select(URLHASH_DATE_DATA_ID.urlhash eq viewid).orderBy(URLHASH_DATE_DATA_ID.date,isAsc = false).limit(numberofdata.toInt())){
+                var one_data = Data_one(date = column[URLHASH_DATE_DATA_ID.date].toString(),data = column[URLHASH_DATE_DATA_ID.data].toString())
+                datas.datalist.add(one_data)
+                datas.tableid = column[URLHASH_DATE_DATA_ID.urlhash].toString()
+            }
+        }
+        datas.number_of_data = datas.datalist.size
+        return datas
+    }
 }
