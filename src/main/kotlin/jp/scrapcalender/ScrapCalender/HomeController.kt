@@ -16,6 +16,9 @@ import kotlin.collections.ArrayList
 import com.fasterxml.jackson.annotation.*
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.*
+import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
+import org.jsoup.select.Elements
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.annotation.RestController
@@ -227,7 +230,19 @@ class RestController{
         var data:String = ""
     )
 
-    @RequestMapping("/view/db_data")
+    class URL_Hash(
+        var return_url: String,
+        var hash: String
+    )
+
+    class Result_Scrape(
+        var results: ArrayList<String>,
+        var geturl: String,
+        var date: String,
+        var dateofnumber: Int
+    )
+
+    @RequestMapping("/api/db_data")
     @ResponseBody
     fun get_db(@RequestParam viewid: String,@RequestParam(defaultValue = "30") numberofdata:String): Datas{
         Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
@@ -242,4 +257,25 @@ class RestController{
         datas.number_of_data = datas.datalist.size
         return datas
     }
+
+    @RequestMapping("/api/urltohash")
+    @ResponseBody
+    fun geturlhash(@RequestParam url: String): URL_Hash{
+        var urlhash = URL_Hash(return_url = url, hash = sha256(url))
+        return urlhash
+    }
+
+    @RequestMapping("/api/scrape")
+    @ResponseBody
+    fun scrapeapi(@RequestParam url: String,@RequestParam selecter: String): Result_Scrape{
+        val document: Document = Jsoup.connect(url).get()
+        var elems: Elements = document.select(selecter)
+        var result = Result_Scrape(results = arrayListOf(),geturl = url ,date = Date().toString(),dateofnumber = 0)
+        for(elem : Element in elems){
+            result.results.add(elem.text())
+        }
+        result.dateofnumber = result.results.size
+        return result
+    }
+
 }
