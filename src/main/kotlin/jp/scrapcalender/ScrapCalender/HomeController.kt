@@ -231,7 +231,6 @@ fun add_csv(view_link: String){
             counter = counter + 1
         }
     }
-    Thread.sleep(10000)
 }
 
 @RestController
