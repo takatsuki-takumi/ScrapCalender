@@ -8,26 +8,24 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
+import org.jsoup.select.Selector
 import java.sql.Connection
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Date
+import org.slf4j.LoggerFactory
 
 //最新のスケジュールと今の時間の比較
 fun check_time(): Boolean{
     Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
     var checker = true
-    transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
-        var cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
-        var date_now: Date = cal.getTime()
-        for(column in URL_TIME_SPAN_SAME.selectAll().orderBy(URL_TIME_SPAN_SAME.date).limit(1)){
-            var latest_date = column[URL_TIME_SPAN_SAME.date].toString()
-            var format = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH)
-            var latest_date_date = format.parse(latest_date)
-            if(date_now.before(latest_date_date)){
-                checker = false
-            }
-        }
+    var cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
+    var date_now: Date = cal.getTime()
+    var latest_date = get_latest().first
+    var format = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH)
+    var latest_date_date = format.parse(latest_date)
+    if(date_now.before(latest_date_date)){
+        checker = false
     }
     return checker
 }
@@ -35,12 +33,7 @@ fun check_time(): Boolean{
 //スケジュールが最近のURL取得
 fun get_latest_url(): String{
     Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
-    var latest_url = ""
-    transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
-        for(column in URL_TIME_SPAN_SAME.selectAll().orderBy(URL_TIME_SPAN_SAME.date).limit(1)){
-            latest_url = column[URL_TIME_SPAN_SAME.url].toString()
-        }
-    }
+    var latest_url = get_latest().second
     return latest_url
 }
 
@@ -75,50 +68,78 @@ fun delete_latest(latest_url: String){
 //スクレイピング
 fun scrape(url: String) {
     Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
+    val logger = LoggerFactory.getLogger("log")
     val document: Document = Jsoup.connect(url).get()
     var url_hash = sha256(url)
     var cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
     var date_now: Date = cal.getTime()
     var counter = true
     transaction (transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
-        for (column in URLHASH_TYPE_SELECTER_ID.select(URLHASH_TYPE_SELECTER_ID.urlhash eq url_hash)){
+        for (column in URLHASH_TYPE_SELECTER_ID.select(URLHASH_TYPE_SELECTER_ID.urlhash eq url_hash)) {
             //スクレイピングの結果取得
-            var elems: Elements = document.select(column[URLHASH_TYPE_SELECTER_ID.selecter].toString())
-            for(elem: Element in elems){
-                //同じデータが連続するのを許すかどうか
-                for(getsame in URL_TIME_SPAN_SAME.select(URL_TIME_SPAN_SAME.url eq url)){
-                    if(getsame[URL_TIME_SPAN_SAME.same].toString() == "true"){
-                        //同じデータが連続しているかどうか
-                        for (get_before in URLHASH_DATE_DATA_ID.selectAll().orderBy(URLHASH_DATE_DATA_ID.date).limit(1)){
-                            counter = false
-                            if(get_before[URLHASH_DATE_DATA_ID.data].toString() != elem.text()){
+            try {
+                var elems: Elements = document.select(column[URLHASH_TYPE_SELECTER_ID.selecter].toString())
+                for (elem: Element in elems) {
+                    //同じデータが連続するのを許すかどうか
+                    for (getsame in URL_TIME_SPAN_SAME.select(URL_TIME_SPAN_SAME.url eq url)) {
+                        if (getsame[URL_TIME_SPAN_SAME.same].toString() == "true") {
+                            //同じデータが連続しているかどうか
+                            for (get_before in URLHASH_DATE_DATA_ID.select(URLHASH_DATE_DATA_ID.urlhash eq sha256(url)).orderBy(URLHASH_DATE_DATA_ID.id,isAsc = false).limit(1)) {
+                                counter = false
+                                if (get_before[URLHASH_DATE_DATA_ID.data].toString() != elem.text()) {
+                                    URLHASH_DATE_DATA_ID.insert {
+                                        it[urlhash] = url_hash
+                                        it[date] = date_now.toString()
+                                        it[data] = elem.text()
+                                    }
+                                }
+                            }
+                            if (counter) {
                                 URLHASH_DATE_DATA_ID.insert {
                                     it[urlhash] = url_hash
                                     it[date] = date_now.toString()
                                     it[data] = elem.text()
                                 }
                             }
-                        }
-                        if(counter){
+                        } else {
                             URLHASH_DATE_DATA_ID.insert {
                                 it[urlhash] = url_hash
                                 it[date] = date_now.toString()
                                 it[data] = elem.text()
                             }
                         }
-                    }else{
-                        URLHASH_DATE_DATA_ID.insert {
-                            it[urlhash] = url_hash
-                            it[date] = date_now.toString()
-                            it[data] = elem.text()
-                        }
                     }
                 }
+            }catch (e: Selector.SelectorParseException){
+                logger.info(e.toString())
             }
         }
     }
 }
 
+fun get_latest():Pair<String,String>{
+    Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
+    var temp_latest = ""
+    var temp_url = ""
+    var first_flag = true
+    transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1){
+        for(column in URL_TIME_SPAN_SAME.selectAll()){
+            if (first_flag) {
+                temp_latest = column[URL_TIME_SPAN_SAME.date]
+                temp_url = column[URL_TIME_SPAN_SAME.url]
+                first_flag = false
+            }else{
+                var format = SimpleDateFormat("EEE MMM dd HH:mm:ss z yyyy", Locale.ENGLISH)
+                var temp = format.parse(column[URL_TIME_SPAN_SAME.date])
+                if (temp.before(format.parse(temp_latest)) or temp.equals(format.parse(temp_latest))){
+                    temp_latest = temp.toString()
+                    temp_url = column[URL_TIME_SPAN_SAME.url]
+                }
+            }
+        }
+    }
+    return Pair(temp_latest,temp_url)
+}
 
 /*
 var str = "Thu May 16 09:54:10 JST 2019"

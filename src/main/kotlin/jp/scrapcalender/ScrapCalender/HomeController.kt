@@ -13,19 +13,13 @@ import java.security.MessageDigest
 import java.util.*
 import java.util.Date
 import kotlin.collections.ArrayList
-import com.fasterxml.jackson.annotation.*
-import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.module.kotlin.*
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
-import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder.json
-
-
-
+import com.opencsv.CSVWriter
+import java.io.FileWriter
 
 //hash関数
 fun sha256(input: String) = hashString(input)
@@ -60,7 +54,6 @@ object URLHASH_DATE_DATA_ID:Table(){
     var data = text("data")
     var id = integer("id").autoIncrement()
 }
-
 
 //select画面処理
 @Controller
@@ -172,7 +165,6 @@ class Controller {
         Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
         transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
             val cal: Calendar = Calendar.getInstance (TimeZone.getDefault(), Locale.getDefault())
-            cal.add(Calendar.MINUTE, time_span.toInt())
             var date_add:Date = cal.getTime()
             URL_TIME_SPAN_SAME.insert {
                 it[url] = geturl
@@ -202,9 +194,11 @@ class Controller {
     fun view(@RequestParam view_link:String, model: Model,mav: ModelAndView): ModelAndView {
         mav.setViewName("view")
         var listinlist:ArrayList<ArrayList<String>> = arrayListOf()
+        add_csv(view_link)
         Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
         transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
-            for(column in URLHASH_DATE_DATA_ID.select(URLHASH_DATE_DATA_ID.urlhash eq view_link).orderBy(URLHASH_DATE_DATA_ID.date,isAsc = false)){
+            for(column in URLHASH_DATE_DATA_ID.select(URLHASH_DATE_DATA_ID.urlhash eq view_link).orderBy(URLHASH_DATE_DATA_ID.id,isAsc = false)){
+                //view page
                 var templist:ArrayList<String> = arrayListOf()
                 templist.add(column[URLHASH_DATE_DATA_ID.date].toString())
                 templist.add(column[URLHASH_DATE_DATA_ID.data].toString())
@@ -215,6 +209,29 @@ class Controller {
         return mav
     }
 
+}
+
+fun add_csv(view_link: String){
+    Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
+    var filewriter = FileWriter("hoge.csv")
+    var csvWriter = CSVWriter(filewriter,
+            CSVWriter.DEFAULT_SEPARATOR,
+            CSVWriter.NO_QUOTE_CHARACTER,
+            CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+            CSVWriter.DEFAULT_LINE_END
+    )
+    var data = arrayOf<String>("ID","DATE","DATA")
+    csvWriter.writeNext(data)
+    var counter = 1
+    transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
+        for(column in URLHASH_DATE_DATA_ID.select(URLHASH_DATE_DATA_ID.urlhash eq view_link).orderBy(URLHASH_DATE_DATA_ID.id,isAsc = false)){
+            //add csv
+            data = arrayOf(counter.toString(), column[URLHASH_DATE_DATA_ID.date].toString(), column[URLHASH_DATE_DATA_ID.data].toString())
+            csvWriter.writeNext(data)
+            counter = counter + 1
+        }
+    }
+    Thread.sleep(10000)
 }
 
 @RestController
