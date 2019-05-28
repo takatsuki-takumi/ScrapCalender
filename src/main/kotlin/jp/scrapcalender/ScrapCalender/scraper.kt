@@ -1,6 +1,7 @@
 //./gradlew bootRun --args "args"
 package jp.scrapcalender.ScrapCalender
 
+import com.opencsv.CSVWriter
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.SqlExpressionBuilder.eq
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -14,6 +15,8 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.Date
 import org.slf4j.LoggerFactory
+import java.io.FileWriter
+import java.io.IOException
 
 //最新のスケジュールと今の時間の比較
 fun check_time(): Boolean{
@@ -115,6 +118,7 @@ fun scrape(url: String) {
             }
         }
     }
+    add_csv(sha256(url))
 }
 
 fun get_latest():Pair<String,String>{
@@ -139,6 +143,38 @@ fun get_latest():Pair<String,String>{
         }
     }
     return Pair(temp_latest,temp_url)
+}
+
+fun add_csv(view_link: String){
+    val logger = LoggerFactory.getLogger("log")
+    Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
+    var filename = view_link + ".csv"
+    var filewriter = FileWriter(filename)
+    var csvWriter = CSVWriter(filewriter,
+            CSVWriter.DEFAULT_SEPARATOR,
+            CSVWriter.NO_QUOTE_CHARACTER,
+            CSVWriter.DEFAULT_ESCAPE_CHARACTER,
+            CSVWriter.DEFAULT_LINE_END
+    )
+    var data = arrayOf<String>("ID","DATE","DATA")
+    csvWriter.writeNext(data)
+    var counter = 1
+    transaction(transactionIsolation = Connection.TRANSACTION_SERIALIZABLE, repetitionAttempts = 1) {
+        for(column in URLHASH_DATE_DATA_ID.select(URLHASH_DATE_DATA_ID.urlhash eq view_link).orderBy(URLHASH_DATE_DATA_ID.id,isAsc = false)){
+            //add csv
+            data = arrayOf(counter.toString(), column[URLHASH_DATE_DATA_ID.date], column[URLHASH_DATE_DATA_ID.data])
+            csvWriter.writeNext(data)
+            counter = counter + 1
+        }
+    }
+    try {
+        filewriter.flush()
+        filewriter.close()
+        csvWriter.close()
+    } catch (e: IOException) {
+        println("Flushing/closing error!")
+        logger.info(e.toString())
+    }
 }
 
 /*
