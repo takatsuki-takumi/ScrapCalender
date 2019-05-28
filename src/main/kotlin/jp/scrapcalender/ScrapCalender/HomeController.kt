@@ -12,12 +12,21 @@ import java.lang.Exception
 import java.security.MessageDigest
 import java.util.*
 import java.util.Date
+import java.util.Scanner
 import kotlin.collections.ArrayList
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.jsoup.select.Elements
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.http.ResponseEntity
+import org.springframework.http.HttpHeaders
+import org.springframework.http.HttpStatus
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.FileReader
+import java.nio.file.Files
+import java.nio.file.Paths
 
 //hash関数
 fun sha256(input: String) = hashString(input)
@@ -190,6 +199,7 @@ class Controller {
     //view画面処理
     @GetMapping("/view")
     fun view(@RequestParam view_link:String, model: Model,mav: ModelAndView): ModelAndView {
+        model.addAttribute("view_link",view_link)
         mav.setViewName("view")
         var listinlist:ArrayList<ArrayList<String>> = arrayListOf()
         Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
@@ -204,6 +214,23 @@ class Controller {
             mav.addObject("data_list",listinlist)
         }
         return mav
+    }
+
+    @GetMapping("/view/download")
+    fun download_view(@RequestParam view_link: String): ResponseEntity<ByteArray>{
+        var head = HttpHeaders()
+        head.add("Content-Type", "text/csv; charset=MS932")
+        val filename = view_link + ".csv"
+        head.setContentDispositionFormData("filename",filename)
+        var CSVData = byteArrayOf()
+        try{
+            //ファイル読み込み
+            var file = Paths.get("./download/" + filename)
+            CSVData = Files.readAllBytes(file)
+        } catch (e: FileNotFoundException){
+            println(e)
+        }
+        return ResponseEntity(CSVData,head, HttpStatus.OK)
     }
 }
 

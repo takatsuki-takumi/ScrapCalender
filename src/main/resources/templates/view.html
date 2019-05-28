@@ -12,6 +12,10 @@
     <h1>View</h1>
 
     <p>
+    <form action="#" th:action="@{/view/download}" method="GET">
+        <input type="hidden" name="view_link" th:value="${view_link}">
+        <button  type="submit">CSVをダウンロード</button>
+    </form>
     <table rules="all" frame="border">
         <tr>
             <th>日付</th>

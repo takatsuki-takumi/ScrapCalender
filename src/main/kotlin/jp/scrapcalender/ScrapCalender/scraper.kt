@@ -149,6 +149,7 @@ fun add_csv(view_link: String){
     val logger = LoggerFactory.getLogger("log")
     Database.connect("jdbc:sqlite:./SCDB.db", "org.sqlite.JDBC")
     var filename = view_link + ".csv"
+    filename = "./download/" + filename
     var filewriter = FileWriter(filename)
     var csvWriter = CSVWriter(filewriter,
             CSVWriter.DEFAULT_SEPARATOR,
