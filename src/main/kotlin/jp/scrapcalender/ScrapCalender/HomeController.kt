@@ -12,7 +12,6 @@ import java.lang.Exception
 import java.security.MessageDigest
 import java.util.*
 import java.util.Date
-import java.util.Scanner
 import kotlin.collections.ArrayList
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -22,9 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 import org.springframework.http.ResponseEntity
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
-import java.io.File
 import java.io.FileNotFoundException
-import java.io.FileReader
 import java.nio.file.Files
 import java.nio.file.Paths
 
